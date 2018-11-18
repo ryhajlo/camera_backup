@@ -21,15 +21,6 @@ def main(args):
         raise ValueError("Incorrect Parameters")
 
     aio = Client('ryhajlo', 'b5fe0936d9a84629a2d49cd45858fc67')
-    temperature = get_arduino_temperature(0x08)
-    if temperature and temperature < 150 and temperature > -150:
-        print "Temperature: " + str(temperature)
-        try:
-            aio.send('external-temperature', str(temperature))
-        except RequestError:
-            print "Cannot send data"
-    else:
-        print "No temperature read"
     
     # Start handling pictures
     videos = get_videos(folder_path)
@@ -91,22 +82,6 @@ def get_pictures(folder_path):
 
     return pictures
 
-def get_arduino_temperature(device_address):
-    """Read temperature from arduino"""
-    pi = pigpio.pi()
-    h = pi.i2c_open(1, device_address)
-
-    pi.i2c_write_device(h, [0x01])
-    (count, data) = pi.i2c_read_device(h, 2)
-    pi.i2c_close(h)
-
-    if count >= 2:
-        raw_temperature = data[1] << 8
-        raw_temperature |= data[0]
-
-        return (raw_temperature/10.0) * 1.8 + 32.0
-    else:
-        return None
-
 if __name__ == "__main__":
     main(sys.argv[1:])
+
