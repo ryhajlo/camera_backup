@@ -17,21 +17,23 @@ def main(args):
     temperature = sensor.temperature * 1.8 + 32.0
     pressure = sensor.pressure
 
-    try:
-        aio.send('internal-temperature', temperature)
-    except RequestError:
-        print("Cannot send temperature data")
+    if temperature < 120 and temperature > 20:
+        try:
+            aio.send('internal-temperature', temperature)
+        except RequestError:
+            print("Cannot send temperature data")
 
-    try:
-        aio.send('pressure', pressure)
-    except RequestError:
-        print("Cannot send temperature data")
+    if pressure > 950 and pressure < 1070:
+        try:
+            aio.send('pressure', pressure)
+        except RequestError:
+            print("Cannot send temperature data")
 
     print('Internal Temperature: {} degrees F'.format(temperature)) 
     print('Pressure: {}hPa'.format(pressure))
         
     temperature = get_arduino_temperature(0x08)
-    if temperature and temperature < 150 and temperature > -150:
+    if temperature and temperature < 150 and temperature > 20:
         print("Temperature: " + str(temperature))
         try:
             aio.send('external-temperature', str(temperature))
