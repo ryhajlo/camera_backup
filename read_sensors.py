@@ -5,9 +5,12 @@ import busio
 import digitalio
 import smbus
 import sys
+import os
+import errno
 import adafruit_bmp280
 import adafruit_ccs811
 from Adafruit_IO import Client, RequestError
+from timeout import timeout
 
 def main(args):
     aio = Client('ryhajlo', 'b5fe0936d9a84629a2d49cd45858fc67')
@@ -35,6 +38,7 @@ def main(args):
         print("Sleeping for 300 seconds")
         time.sleep(300)
 
+@timeout(55, os.strerror(errno.ETIMEDOUT))
 def gather_data(aio, ccs811_sensor):
     (temperature, pressure) = get_bmp280_data()
 
@@ -52,7 +56,7 @@ def gather_data(aio, ccs811_sensor):
     print('Internal Temperature: {} degrees F'.format(temperature))
     print('Pressure: {}hPa'.format(pressure))
 
-    temperature = get_arduino_temperature(0x10)
+    temperature = get_arduino_temperature(0x08)
     if temperature and temperature < 150 and temperature > 20:
         print("Temperature: " + str(temperature))
         try:
@@ -61,8 +65,17 @@ def gather_data(aio, ccs811_sensor):
             print("Cannot send data")
     else:
         print("No temperature read")
-
-    print('External Temperature: {} degrees F'.format(temperature)) 
+    print('External Temperature: {} degrees F'.format(temperature))
+    
+    moisture = get_arduino_moisture(0x09)
+    if moisture < 32000:
+        print("moisture: " + str(moisture))
+        try:
+            aio.send('moisture-0x09', str(moisture))
+        except RequestError:
+            print("Cannot send data")
+    else:
+        print("No moisture-0x09 read")
     
     (eco2, tvoc, temperature) = get_ccs811_data(ccs811_sensor)
     if temperature and temperature < 150 and temperature > 20:
@@ -117,6 +130,13 @@ def get_arduino_temperature(device_address):
     bus=smbus.SMBus(1)
     raw_temperature = bus.read_word_data(device_address, 0x01)
     return (raw_temperature/10.0) * 1.8 + 32.0
+
+def get_arduino_moisture(device_address):
+    """Read temperature from arduino"""
+    print("Reading arduino temperature")
+    bus=smbus.SMBus(1)
+    moisture = bus.read_word_data(device_address, 0x02)
+    return moisture
 
 if __name__ == "__main__":
     main(sys.argv[1:])
