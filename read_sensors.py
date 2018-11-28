@@ -10,33 +10,41 @@ import errno
 import adafruit_bmp280
 import adafruit_ccs811
 from Adafruit_IO import Client, RequestError
+import RPi.GPIO as GPIO
 from timeout import timeout
 
 def main(args):
     aio = Client('ryhajlo', 'b5fe0936d9a84629a2d49cd45858fc67')
-    
+    CCS811_RESET_GPIO = 17
+    GPIO.setup(CCS811_RESET_GPIO, GPIO.OUT)
+    GPIO.output(CCS811_RESET_GPIO, True)
+
     i2c_bus = busio.I2C(board.SCL, board.SDA)
-    ccs811_sensor = adafruit_ccs811.CCS811(i2c_bus)
-    
-    while not ccs811_sensor.data_ready:
-        pass
-    temp = ccs811_sensor.temperature
-    ccs811_sensor.temp_offset = temp - 25.0
-    print("CCS811 temperature offset: " + str(temp))
-    # Read three times
-    for x in range(0, 3):
-        print("Reading " + str(x))
+    try:
+        ccs811_sensor = adafruit_ccs811.CCS811(i2c_bus)
+
         while not ccs811_sensor.data_ready:
             pass
-        eco2 = ccs811_sensor.eco2
-        tvoc = ccs811_sensor.tvoc
-        temperature = ccs811_sensor.temperature
-        time.sleep(0.5)
-    while True:
-        print("Gathering Data")
-        gather_data(aio, ccs811_sensor)
-        print("Sleeping for 300 seconds")
-        time.sleep(300)
+        temp = ccs811_sensor.temperature
+        ccs811_sensor.temp_offset = temp - 25.0
+        print("CCS811 temperature offset: " + str(temp))
+        # Read three times
+        for x in range(0, 3):
+            print("Reading " + str(x))
+            while not ccs811_sensor.data_ready:
+                pass
+            eco2 = ccs811_sensor.eco2
+            tvoc = ccs811_sensor.tvoc
+            temperature = ccs811_sensor.temperature
+            time.sleep(0.5)
+        while True:
+            print("Gathering Data")
+            gather_data(aio, ccs811_sensor)
+            print("Sleeping for 300 seconds")
+            time.sleep(300)
+    except RuntimeError:
+        GPIO.output(CCS811_RESET_GPIO, False)
+        sys.exit("Resetting CCS811")
 
 @timeout(55, os.strerror(errno.ETIMEDOUT))
 def gather_data(aio, ccs811_sensor):
