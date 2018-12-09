@@ -40,8 +40,8 @@ def main(args):
         while True:
             print("Gathering Data")
             gather_data(aio, ccs811_sensor)
-            print("Sleeping for 300 seconds")
-            time.sleep(300)
+            print("Sleeping for 60 seconds")
+            time.sleep(60)
     except RuntimeError:
         GPIO.output(CCS811_RESET_GPIO, False)
         sys.exit("Resetting CCS811")
@@ -75,15 +75,15 @@ def gather_data(aio, ccs811_sensor):
         print("No temperature read")
     print('External Temperature: {} degrees F'.format(temperature))
     
-    moisture = get_arduino_moisture(0x09)
+    moisture = get_arduino_moisture(0x0A)
     if moisture < 32000:
-        print("moisture: " + str(moisture))
+        print("moisture-0x0a: " + str(moisture))
         try:
-            aio.send('moisture-0x09', str(moisture))
+            aio.send('moisture-0x0a', str(moisture))
         except RequestError:
             print("Cannot send data")
     else:
-        print("No moisture-0x09 read")
+        print("No moisture-0x0a read")
     
     (eco2, tvoc, temperature) = get_ccs811_data(ccs811_sensor)
     if temperature and temperature < 150 and temperature > 20:
@@ -136,8 +136,13 @@ def get_arduino_temperature(device_address):
     """Read temperature from arduino"""
     print("Reading arduino temperature")
     bus=smbus.SMBus(1)
-    raw_temperature = bus.read_word_data(device_address, 0x01)
-    return (raw_temperature/10.0) * 1.8 + 32.0
+    data_array = bus.read_i2c_block_data(device_address, 0x01, 4)
+
+    raw_temperature = data_array[0]
+    raw_temperature |= data_array[1] << 8
+    raw_temperature |= data_array[2] << 16
+    raw_temperature |= data_array[3] << 24
+    return (raw_temperature/10000.0) * 1.8 + 32.0
 
 def get_arduino_moisture(device_address):
     """Read temperature from arduino"""
