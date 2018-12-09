@@ -46,7 +46,7 @@ def main(args):
     for picture in pictures:
         print "Will upload: " + picture
         command.append(picture)
-    command.append('/camera/pictures/')
+    command.append('/camera/pictures/noir/')
     subprocess.call(command)
     print "Finished uploading pictures"
 
@@ -57,7 +57,7 @@ def main(args):
     for video in videos:
         print "Will upload: " + video
         command.append(video)
-    command.append('/camera/videos/')
+    command.append('/camera/videos/noir/')
     subprocess.call(command)
     print "Finished uploading videos"
 
