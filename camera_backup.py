@@ -3,7 +3,6 @@
 import sys
 import os
 import glob
-import pigpio
 from os import listdir
 from os.path import isfile, join
 import subprocess
@@ -21,11 +20,11 @@ def main(args):
         raise ValueError("Incorrect Parameters")
 
     #Get the camera name. Default to visible
-    try:
-        with open('camera_name.cfg') as f:
-            camera_name = f.readLine()
-    except:
-        camera_name = 'visible'
+    with open('camera_name.cfg', 'r') as f:
+        print("open")
+        camera_name = f.read().strip()
+
+    print("Camera name: " + camera_name)
 
     aio = Client('ryhajlo', 'b5fe0936d9a84629a2d49cd45858fc67')
     
@@ -69,7 +68,9 @@ def main(args):
             image_str = base64.b64encode(imageFile.read())
   
         print "Uploading latest to Adafruit IO"
-        aio.send('pic-' + camera_name, image_str )
+        feed_name = 'pic-' + camera_name
+        print("Feed Name: " + feed_name)
+        aio.send(feed_name, image_str )
         print "Finished uploading to Adafruit IO"
     else:
         latest_picture = None
