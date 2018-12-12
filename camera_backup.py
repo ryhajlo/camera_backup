@@ -9,6 +9,8 @@ import subprocess
 from Adafruit_IO import Client, RequestError
 import base64
 
+__location__ = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file__)))
+
 def main(args):
     """Main function"""
     if args:
@@ -20,7 +22,7 @@ def main(args):
         raise ValueError("Incorrect Parameters")
 
     #Get the camera name. Default to visible
-    with open('camera_name.cfg', 'r') as f:
+    with open(os.path.join(__location__, 'camera_name.cfg'), 'r') as f:
         print("open")
         camera_name = f.read().strip()
 
