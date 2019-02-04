@@ -52,11 +52,6 @@ def gather_data(aio, ccs811_sensor):
 
     if temperature < 120 and temperature > 20 and pressure > 950 and pressure < 1070:
         try:
-            aio.send('internal-temperature', temperature)
-        except RequestError:
-            print("Cannot send temperature data")
-
-        try:
             aio.send('pressure', pressure)
         except RequestError:
             print("Cannot send temperature data")
@@ -64,7 +59,7 @@ def gather_data(aio, ccs811_sensor):
     print('Internal Temperature: {} degrees F'.format(temperature))
     print('Pressure: {}hPa'.format(pressure))
 
-    temperature = get_arduino_temperature(0x08)
+    temperature = get_arduino_temperature(0x0A)
     if temperature and temperature < 150 and temperature > 20:
         print("Temperature: " + str(temperature))
         try:
@@ -89,7 +84,6 @@ def gather_data(aio, ccs811_sensor):
     if temperature and temperature < 150 and temperature > 20:
         print("Temperature: " + str(temperature))
         try:
-            aio.send('ccs811-temperature', str(temperature))
             aio.send('ccs811-eco2', str(eco2))
             aio.send('ccs811-tvoc', str(tvoc))
         except RequestError:
